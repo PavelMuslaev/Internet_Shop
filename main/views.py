@@ -2,7 +2,6 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, DetailView
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
-from unicodedata import category
 
 from .models import Category, Product, Size
 from django.db.models import Q
@@ -15,6 +14,7 @@ class IndexView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['categories'] = Category.objects.all()
         context['current_category'] = None
+        # print(context) TODO: потом постмотреть содержимое context
         return context
 
     def get(self, request, *args, **kwargs):
@@ -48,13 +48,12 @@ class CatalogView(TemplateView):
 
         if query := self.request.GET.get('q'):
             products = products.filter(
-                Q(title__icontains=query) | Q(description__icontains=query)
+                Q(name__icontains=query) | Q(description__icontains=query)
             )
 
         filter_params = {}
         for param, filter_func in self.FILTER_MAPPING.items():
-            value = self.request.GET.get(param)
-            if value:
+            if value := self.request.GET.get(param):
                 products = filter_func(products, value)
                 filter_params[param] = value
             else:
@@ -73,7 +72,7 @@ class CatalogView(TemplateView):
 
         if self.request.GET.get('show_search') == 'true':
             context['show_search'] = True
-        elif self.request.GET.get('reset_search') == 'false':
+        elif self.request.GET.get('reset_search') == 'true':
             context['reset_search'] = True
 
         return context
@@ -84,8 +83,8 @@ class CatalogView(TemplateView):
             if context.get('show_search'):
                 return TemplateResponse(request, 'main/search_input.html', context)
             elif context.get('reset_search'):
-                return TemplateResponse(request, 'main/search_button.html', context)
-            template = 'main/filter_modal.html' if request.GET.get('show_search') else 'main/search_input.html'
+                return TemplateResponse(request, 'main/search_button.html', {})
+            template = 'main/filter_modal.html' if request.GET.get('show_filters') == 'true' else 'main/catalog.html'
             return TemplateResponse(request, template, context)
         return TemplateResponse(request, self.template_name, context)
 
@@ -98,16 +97,18 @@ class ProductDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        product =self.get_object()
+        product = self.get_object()
         context['categories'] = Category.objects.all()
         context['related_products'] = Product.objects.filter(
             category=product.category
-        ).exclude(id=product.id)[:4]
+        ).exclude(id=product.id)[:4] # до 4 товаров той же категории, исключая текущий.
+        # Использован срез [:4], Django транслирует это в LIMIT 4.
         context['current_category'] = product.category.slug
         return context
 
     def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
         context = self.get_context_data(**kwargs)
         if request.headers.get('HX-Request'):
-            return TemplateResponse(request, 'main/product_detail.html')
+            return TemplateResponse(request, 'main/product_detail.html', context)
         raise TemplateResponse(request, self.template_name, context)
