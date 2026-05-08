@@ -1,8 +1,8 @@
 from django.contrib import admin
-from .models import Category, Size, Product, \
-                    ProductImage, ProductSize
+from .models import Category, Size, Product, ProductImage, ProductSize
 
 # Register your models here.
+
 
 # Классы инлайн нужны для того, чтобы регистрировать сущности в одном месте.
 # Например у нас есть класс Product и класс Size, это две отдельные сущности,
@@ -24,6 +24,7 @@ class ProductImageInline(admin.TabularInline):
     не переходя в отдельный интерфейс добавления. После сохранения родительского
     объекта все заполненные формы становятся новыми записями.
     """
+
     model = ProductImage
     extra = 1
 
@@ -32,27 +33,29 @@ class ProductSizeInline(admin.TabularInline):
     model = ProductSize
     extra = 1
 
+
 # Регистрируем класс Product в админ панели
 class ProductAdmin(admin.ModelAdmin):
     # Лист, который мы будем видеть при заходе на админку.
     # Там будут описаны все наши продукты.
     # Возьмём только основные параметры
-    list_display = ['name', 'category', 'color', 'price']
-    list_filter = ['category', 'color', 'name']
-    search_fields = ['name', 'color', 'description']
+    list_display = ["name", "category", "color", "price"]
+    list_filter = ["category", "color", "name"]
+    search_fields = ["name", "color", "description"]
     # Позволяет заполнять параметры, из тех параметров, что у нас уже есть.
     # Например, мы будем вводить name в нашей админке и нас автоматически
     # будет подбираться slug.
-    prepopulated_fields = {'slug':('name',)}
+    prepopulated_fields = {"slug": ("name",)}
     inlines = [ProductSizeInline, ProductImageInline]
 
 
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'slug']
-    prepopulated_fields = {'slug':('name',)}
+    list_display = ["name", "slug"]
+    prepopulated_fields = {"slug": ("name",)}
+
 
 class SizeAdmin(admin.ModelAdmin):
-    list_display = ['name']
+    list_display = ["name"]
 
 
 # Регестриуем модели и её админ версии

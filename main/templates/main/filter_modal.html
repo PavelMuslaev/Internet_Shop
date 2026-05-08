@@ -7,7 +7,7 @@
         </button>
     </div>
 
-    <form hx-get="{% if current_category %}{% url 'main:catalog' current_category %}{% else %}{% url 'main:catalog_all' %}{% endif %}"
+    <form hx-get="{% if current_category %}{% url 'main:catalog' current_category.slug %}{% else %}{% url 'main:catalog_all' %}{% endif %}"
           hx-target="#main-content"
           hx-push-url="true">
         <input type="hidden" name="q" value="{{ filter_params.q|default:'' }}">

@@ -1,4 +1,3 @@
-{% block content %}
 <main class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb and Filters -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 sm:mb-12 space-y-4 sm:space-y-0">
@@ -10,7 +9,7 @@
             {% endif %}
         </h2>
         <button class="bg-black text-white px-4 py-2 text-sm font-medium uppercase hover:bg-gray-800 transition-colors w-full sm:w-auto" 
-                hx-get="{% if current_category %}{% url 'main:catalog' current_category %}{% else %}{% url 'main:catalog_all' %}{% endif %}?show_filters=true&color={{ filter_params.color|urlencode }}&min_price={{ filter_params.min_price|urlencode }}&max_price={{ filter_params.max_price|urlencode }}&size={{ filter_params.size|urlencode }}" 
+                hx-get="{% if current_category %}{% url 'main:catalog' current_category.slug %}{% else %}{% url 'main:catalog_all' %}{% endif %}?show_filters=true&color={{ filter_params.color|urlencode }}&min_price={{ filter_params.min_price|urlencode }}&max_price={{ filter_params.max_price|urlencode }}&size={{ filter_params.size|urlencode }}"
                 hx-target="#filter-modal-content"
                 hx-swap="innerHTML"
                 hx-on::after-request="document.getElementById('filter-modal').classList.remove('hidden')">
@@ -55,7 +54,7 @@
         <h3 class="text-2xl font-bold text-gray-900 mb-4 uppercase">НИЧЕГО НЕ НАШЕЛ :(</h3>
         <p class="text-gray-600 mb-8">
             {% if current_category %}
-                No products available in this category yet.
+                ТОВАРОВ В ЭТОЙ КАТЕГОРИИ ПОКА НЕТ В НАЛИЧИИ :(
             {% else %}
                 НЕ НАШЛИ ПРОДУКТЫ ПО ДАННОМУ ФИЛЬТРУ :(
             {% endif %}
@@ -87,4 +86,3 @@
         });
     });
 </script>
-{% endblock %}
