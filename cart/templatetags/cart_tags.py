@@ -1,12 +1,12 @@
 from django import template
 from cart.models import Cart
 
-
 register = template.Library()
+
 
 @register.simple_tag(takes_context=True)
 def get_cart_count(context):
-    request = context['request']
+    request = context["request"]
     if not request.session.session_key:
         return 0
 

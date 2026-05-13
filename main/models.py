@@ -22,17 +22,6 @@ class Size(models.Model):
         return self.name
 
 
-class ProductSize(models.Model):
-    product = models.ForeignKey(
-        "Product", on_delete=models.CASCADE, related_name="product_sizes"
-    )
-    size = models.ForeignKey(Size, on_delete=models.CASCADE)
-    stock = models.PositiveIntegerField(default=0)
-
-    def __str__(self):
-        return f"{self.size.name} ({self.stock} in stock) for {self.product.name}"
-
-
 class Product(models.Model):
     name = models.CharField(max_length=100)
     slug = models.CharField(max_length=100, unique=True)
@@ -53,6 +42,17 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ProductSize(models.Model):
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="product_sizes"
+    )
+    size = models.ForeignKey(Size, on_delete=models.CASCADE)
+    stock = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.size.name} ({self.stock} in stock) for {self.product.name}"
 
 
 class ProductImage(models.Model):
