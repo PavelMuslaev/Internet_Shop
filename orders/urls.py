@@ -1,3 +1,5 @@
+"""URL routes for the orders application."""
+
 from django.urls import path
 from .views import CheckoutView
 

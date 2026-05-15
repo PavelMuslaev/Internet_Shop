@@ -1,3 +1,5 @@
+"""URL routes for Stripe payment callbacks and webhooks."""
+
 from django.urls import path
 from . import views
 

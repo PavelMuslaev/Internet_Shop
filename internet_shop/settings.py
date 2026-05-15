@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     "main",  # регистрируем приложение main
     "cart",  # регистрируем приложение main
     "users",
-    "orders"
+    "orders",
+    "payment",
 ]
 
 MIDDLEWARE = [

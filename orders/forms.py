@@ -1,8 +1,17 @@
+"""Forms used by the checkout flow."""
+
+from typing import Any
+
 from django import forms
+from django.contrib.auth import get_user_model
 from django.utils.html import strip_tags
+
+UserModel = get_user_model()
 
 
 class OrderForm(forms.Form):
+    """Checkout form prefilled from the authenticated user's profile."""
+
     first_name = forms.CharField(
         max_length=50,
         widget=forms.TextInput(attrs={
@@ -89,7 +98,8 @@ class OrderForm(forms.Form):
         })
     )
 
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args: Any, user: UserModel | None = None, **kwargs: Any) -> None:
+        """Initialize checkout fields and copy profile data when available."""
         super().__init__(*args, **kwargs)
         if user:
             self.fields['first_name'].initial = user.first_name
@@ -104,7 +114,8 @@ class OrderForm(forms.Form):
             self.fields['postal_code'].initial = user.postal_code
             self.fields['phone'].initial = user.phone
 
-    def clean(self):
+    def clean(self) -> dict[str, Any]:
+        """Strip HTML tags from optional address/contact fields."""
         cleaned_data = super().clean()
         for field in ['company', 'address1', 'address2', 'city',
                       'country', 'province', 'postal_code', 'phone']:
