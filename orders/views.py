@@ -29,7 +29,7 @@ class CheckoutView(CartMixin, View):
         if cart.total_items == 0:
             logger.warning("Cart is empty, redirecting to cart page")
             if request.headers.get('HX-Request'):
-                return TemplateResponse(request, 'orders/empty_cart.html', {'message': 'Your cart is empty'})
+                return TemplateResponse(request, 'orders/empty_cart.html', {'message': 'Ваша корзина пуста'})
             return redirect('cart:cart_modal')
 
         total_price = cart.subtotal
@@ -56,7 +56,7 @@ class CheckoutView(CartMixin, View):
         if cart.total_items == 0:
             logger.warning("Cart is empty, redirecting to cart page")
             if request.headers.get('HX-Request'):
-                return TemplateResponse(request, 'orders/empty_cart.html', {'message': 'Your cart is empty'})
+                return TemplateResponse(request, 'orders/empty_cart.html', {'message': 'Ваша корзина пуста'})
             return redirect('cart:cart_modal')
 
         if not payment_provider or payment_provider not in ['stripe', 'heleket']:
@@ -66,7 +66,7 @@ class CheckoutView(CartMixin, View):
                 'cart': cart,
                 'cart_items': cart.items.select_related('product', 'product_size__size').order_by('-added_at'),
                 'total_price': cart.subtotal,
-                'error_message': 'Please select a valid payment provider (Stripe or Heleket).',
+                'error_message': 'Выберите корректный способ оплаты.',
             }
             if request.headers.get('HX-Request'):
                 return TemplateResponse(request, 'orders/checkout_content.html', context)
@@ -127,7 +127,7 @@ class CheckoutView(CartMixin, View):
                     'cart': cart,
                     'cart_items': cart.items.select_related('product', 'product_size__size').order_by('-added_at'),
                     'total_price': total_price,
-                    'error_message': f'Payment processing error: {str(e)}',
+                    'error_message': f'Ошибка обработки платежа: {str(e)}',
                 }
                 if request.headers.get('HX-Request'):
                     return TemplateResponse(request, 'orders/checkout_content.html', context)
@@ -139,7 +139,7 @@ class CheckoutView(CartMixin, View):
                 'cart': cart,
                 'cart_items': cart.items.select_related('product', 'product_size__size').order_by('-added_at'),
                 'total_price': total_price,
-                'error_message': 'Please correct the errors in the form.',
+                'error_message': 'Исправьте ошибки в форме.',
             }
             if request.headers.get('HX-Request'):
                 return TemplateResponse(request, 'orders/checkout_content.html', context)

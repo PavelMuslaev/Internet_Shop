@@ -60,7 +60,7 @@ class AddToCartView(CartMixin, View):
         if not form.is_valid():
             return JsonResponse(
                 {
-                    "error": "Invalid form data",
+                    "error": "Некорректные данные формы",
                     "errors": form.errors,
                 },
                 status=400,
@@ -72,12 +72,12 @@ class AddToCartView(CartMixin, View):
         else:
             product_size = product.product_sizes.filter(stock__gt=0).first()
             if not product_size:
-                return JsonResponse({"error": "No sizes available"}, status=400)
+                return JsonResponse({"error": "Нет доступных размеров"}, status=400)
 
         quantity = form.cleaned_data["quantity"]
         if product_size.stock < quantity:
             return JsonResponse(
-                {"error": f"Only {product_size.stock} items available"},
+                {"error": f"Доступно только {product_size.stock} шт."},
                 status=400,
             )
 
@@ -93,8 +93,8 @@ class AddToCartView(CartMixin, View):
                 return JsonResponse(
                     {
                         "error": (
-                            f"Cannot add {quantity} items. "
-                            f"Only {available_quantity} more available."
+                            f"Нельзя добавить {quantity} шт. "
+                            f"Доступно еще только {available_quantity} шт."
                         )
                     },
                     status=400,
@@ -111,7 +111,7 @@ class AddToCartView(CartMixin, View):
             {
                 "success": True,
                 "total_items": cart.total_items,
-                "message": f"{product.name} added to cart",
+                "message": f"{product.name} добавлен в корзину",
                 "cart_item_id": cart_item.id,
             }
         )
@@ -134,14 +134,14 @@ class UpdateCartItemView(CartMixin, View):
         quantity = form.cleaned_data["quantity"]
 
         if quantity < 0:
-            return JsonResponse({"error": "Invalid quantity"}, status=400)
+            return JsonResponse({"error": "Некорректное количество"}, status=400)
 
         if quantity == 0:
             cart_item.delete()
         else:
             if quantity > cart_item.product_size.stock:
                 return JsonResponse(
-                    {"error": f"Only {cart_item.product_size.stock} items available"},
+                    {"error": f"Доступно только {cart_item.product_size.stock} шт."},
                     status=400,
                 )
 
@@ -184,7 +184,7 @@ class RemoveCartItemView(CartMixin, View):
             }
             return TemplateResponse(request, "cart/cart_modal.html", context)
         except CartItem.DoesNotExist:
-            return JsonResponse({"error": "Item not found"}, status=400)
+            return JsonResponse({"error": "Товар не найден"}, status=400)
 
 
 class CartCountView(CartMixin, View):
@@ -211,7 +211,7 @@ class ClearCartView(CartMixin, View):
 
         if request.headers.get("HX-Request"):
             return TemplateResponse(request, "cart/cart_empty.html", {"cart": cart})
-        return JsonResponse({"success": True, "message": "Cart cleared"})
+        return JsonResponse({"success": True, "message": "Корзина очищена"})
 
 
 class CartSummaryView(CartMixin, View):

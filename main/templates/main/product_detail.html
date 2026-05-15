@@ -6,7 +6,7 @@
                hx-get="{% url 'main:index' %}" 
                hx-target="#main-content" 
                hx-push-url="true"
-               class="hover:text-gray-900">HOME</a>
+               class="hover:text-gray-900">ГЛАВНАЯ</a>
             <span class="mx-2">/</span>
             <a href="{% url 'main:catalog' product.category.slug %}" 
                hx-get="{% url 'main:catalog' product.category.slug %}" 
@@ -29,7 +29,7 @@
                          class="w-full h-full object-cover">
                 {% else %}
                     <div class="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <span class="text-gray-400">No Image</span>
+                        <span class="text-gray-400">Нет изображения</span>
                     </div>
                 {% endif %}
             </div>
@@ -56,13 +56,13 @@
                     {{ product.name|upper }}
                 </h1>
                 <p class="text-lg text-gray-600 mb-4">{{ product.color|upper }}</p>
-                <p class="text-2xl font-bold text-gray-900">${{ product.price }}</p>
+                <p class="text-2xl font-bold text-gray-900">{{ product.price }} ₽</p>
             </div>
 
             <!-- Sizes -->
             {% if product.product_sizes.all %}
             <div>
-                <h3 class="text-sm font-medium text-gray-900 mb-3">SIZE</h3>
+                <h3 class="text-sm font-medium text-gray-900 mb-3">РАЗМЕР</h3>
                 <div class="grid grid-cols-4 gap-2">
                     {% for product_size in product.product_sizes.all %}
                     <div class="size-option">
@@ -84,8 +84,8 @@
             </div>
             {% else %}
             <div>
-                <h3 class="text-sm font-medium text-gray-900 mb-3">SIZE</h3>
-                <p class="text-sm text-gray-600">No sizes available</p>
+                <h3 class="text-sm font-medium text-gray-900 mb-3">РАЗМЕР</h3>
+                <p class="text-sm text-gray-600">Нет доступных размеров</p>
             </div>
             {% endif %}
 
@@ -95,26 +95,26 @@
                         class="w-full bg-black text-white py-3 px-6 text-sm font-medium hover:bg-gray-800 transition-colors"
                         onclick="addToCart(this)"
                         {% if not product.product_sizes.all %}disabled{% endif %}>
-                    ADD TO CART
+                    ДОБАВИТЬ В КОРЗИНУ
                 </button>
                 
                 <button class="w-full border border-gray-300 py-3 px-6 text-sm font-medium hover:border-gray-900 transition-colors">
-                    ADD TO WISHLIST
+                    ДОБАВИТЬ В ИЗБРАННОЕ
                 </button>
             </div>
 
             <!-- Product Details -->
             <div class="border-t border-gray-200 pt-6">
-                <h3 class="text-sm font-medium text-gray-900 mb-3">DETAILS</h3>
+                <h3 class="text-sm font-medium text-gray-900 mb-3">ОПИСАНИЕ</h3>
                 <div class="prose prose-sm text-gray-600">
                     <p>{{ product.description|linebreaks }}</p>
-                    <p>Created: {{ product.created_at|date:"F d, Y" }}</p>
+                    <p>Добавлено: {{ product.created_at|date:"d.m.Y" }}</p>
                 </div>
             </div>
 
             <!-- Care Instructions -->
             <div class="border-t border-gray-200 pt-6">
-                <h3 class="text-sm font-medium text-gray-900 mb-3">CARE</h3>
+                <h3 class="text-sm font-medium text-gray-900 mb-3">УХОД</h3>
                 <div class="prose prose-sm text-gray-600">
                     <p>Только профессиональная химчистка</p>
                     <p>Не отбеливать</p>
@@ -141,14 +141,14 @@
                              class="product-image w-full h-full object-cover">
                     {% else %}
                         <div class="product-image w-full h-full bg-gray-200 flex items-center justify-center">
-                            <span class="text-gray-400 text-sm">No Image</span>
+                            <span class="text-gray-400 text-sm">Нет изображения</span>
                         </div>
                     {% endif %}
                 </div>
                 <div class="text-center">
                     <h3 class="text-sm font-medium text-gray-900 mb-1">{{ related_product.name|upper }}</h3>
                     <p class="text-sm text-gray-600 mb-1">{{ related_product.color|upper }}</p>
-                    <p class="text-sm font-medium">${{ related_product.price }}</p>
+                    <p class="text-sm font-medium">{{ related_product.price }} ₽</p>
                 </div>
             </div>
             {% endfor %}
@@ -210,7 +210,7 @@
         console.log('Selected Size ID:', selectedSizeId);
 
         if (!selectedSizeId) {
-            showNotification('Please select a size');
+            showNotification('Выберите размер');
             return;
         }
 
@@ -243,7 +243,7 @@
         })
         .catch(error => {
             console.error('Error:', error);
-            showNotification('Error adding to cart');
+            showNotification('Ошибка добавления в корзину');
         });
     };
     
@@ -292,7 +292,7 @@
             console.log('No size radios available');
             addToCartBtn.disabled = true;
             addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            showNotification('No sizes available');
+            showNotification('Нет доступных размеров');
             return;
         }
 
@@ -303,7 +303,7 @@
             console.log('All sizes are out of stock');
             addToCartBtn.disabled = true;
             addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            showNotification('All sizes are out of stock');
+            showNotification('Все размеры закончились');
             return;
         }
 

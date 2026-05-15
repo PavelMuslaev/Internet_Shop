@@ -120,9 +120,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "ru-ru"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Moscow"
 
 USE_I18N = True
 
@@ -148,3 +148,5 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+PAYMENT_CURRENCY = os.getenv("PAYMENT_CURRENCY", "rub")
+PAYMENT_CURRENCY_LABEL = os.getenv("PAYMENT_CURRENCY_LABEL", "RUB")

@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -133,7 +133,7 @@
                    hx-target="#main-content"
                    hx-push-url="true"
                    class="mobile-nav-link block text-lg font-medium text-gray-900 hover:text-gray-700 py-2 border-b border-gray-200">
-                   HOME
+                   ГЛАВНАЯ
                 </a>
                 {% for category in categories %}
                 <a href="{% url 'main:catalog' category.slug %}"
@@ -147,15 +147,15 @@
             </nav>
 
             <div class="mt-8 space-y-4">
-                <a href="#" class="block text-sm font-medium text-gray-900 hover:text-gray-700 py-2">SEARCH</a>
+                <a href="#" class="block text-sm font-medium text-gray-900 hover:text-gray-700 py-2">ПОИСК</a>
                 <a href="{% url 'users:profile' %}"
                 hx-get="{% url 'users:profile' %}"
                 hx-target="#main-content"
                 hx-push-url="true"
                 class="text-sm font-medium text-gray-900 uppercase hover:text-gray-600">
-                    ACCOUNT
+                    АККАУНТ
                 </a>
-                <a href="#" id="mobileCart" class="block text-sm font-medium text-gray-900 hover:text-gray-700 py-2">CART (0)</a>
+                <a href="#" id="mobileCart" class="block text-sm font-medium text-gray-900 hover:text-gray-700 py-2">КОРЗИНА (0)</a>
             </div>
         </div>
     </div>
@@ -205,7 +205,7 @@
                                 hx-target="#mobile-search-wrapper"
                                 hx-swap="innerHTML"
                                 class="text-sm font-medium uppercase hover:text-gray-600">
-                            SEARCH
+                            ПОИСК
                         </button>
                     </div>
                     <a href="{% url 'users:profile' %}"
@@ -213,14 +213,14 @@
                     hx-target="#main-content"
                     hx-push-url="true"
                     class="text-sm font-medium text-gray-900 uppercase hover:text-gray-600">
-                        ACCOUNT
+                        АККАУНТ
                     </a>
-                    <a href="#" id="desktopCart" class="text-sm font-medium text-gray-900 hover:text-gray-700">CART (0)</a>
+                    <a href="#" id="desktopCart" class="text-sm font-medium text-gray-900 hover:text-gray-700">КОРЗИНА (0)</a>
                 </div>
 
                 <!-- Mobile Cart Icon -->
                 <div class="md:hidden">
-                    <a href="#" id="mobileCartHeader" class="text-xs font-medium text-gray-900">CART (0)</a>
+                    <a href="#" id="mobileCartHeader" class="text-xs font-medium text-gray-900">КОРЗИНА (0)</a>
                 </div>
             </div>
         </div>
@@ -240,7 +240,7 @@
                     ENFANTS RICHES DÉPRIMÉS
                 </h2>
                 <p class="text-lg text-gray-600 mb-8">
-                    Select a category to browse our collection
+                    Выберите категорию, чтобы посмотреть коллекцию
                 </p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
                     {% for category in categories %}
@@ -298,7 +298,7 @@
             updateCartCount();
 
             function updateHeaderCartCount(count) {
-                const cartText = `CART (${count})`;
+                const cartText = `КОРЗИНА (${count})`;
                 if (desktopCart) desktopCart.textContent = cartText;
                 if (mobileCart) mobileCart.textContent = cartText;
                 if (mobileCartHeader) mobileCartHeader.textContent = cartText;
@@ -365,7 +365,7 @@
             const desktopCart = document.getElementById('desktopCart');
             const mobileCart = document.getElementById('mobileCart');
             const mobileCartHeader = document.getElementById('mobileCartHeader');
-            const cartText = `CART (${count})`;
+            const cartText = `КОРЗИНА (${count})`;
 
             if (desktopCart) desktopCart.textContent = cartText;
             if (mobileCart) mobileCart.textContent = cartText;
