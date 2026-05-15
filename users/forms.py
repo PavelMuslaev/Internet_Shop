@@ -1,3 +1,5 @@
+from typing import Any
+
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model, authenticate
@@ -8,6 +10,8 @@ User = get_user_model()
 
 
 class CustomUserCreationForm(UserCreationForm):
+    """Registration form for creating email-based users."""
+
     email = forms.EmailField(required=True, max_length=254, widget=forms.EmailInput(
         attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
                'placeholder': 'EMAIL'}))
@@ -34,13 +38,15 @@ class CustomUserCreationForm(UserCreationForm):
         model = User
         fields = ('first_name', 'last_name', 'email', 'password1', 'password2')
 
-    def clean_email(self):
+    def clean_email(self) -> str:
+        """Validate that the submitted email is unique."""
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError('This email is already in use.')
         return email
 
-    def save(self, commit=True):
+    def save(self, commit: bool = True) -> Any:
+        """Save a new custom user instance."""
         user = super().save(commit=False)
         if commit:
             user.save()
@@ -48,6 +54,8 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class CustomUserLoginForm(AuthenticationForm):
+    """Authentication form that accepts an email in the username field."""
+
     username = forms.CharField(label="Email", widget=forms.TextInput(
         attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
                'placeholder': 'EMAIL'}))
@@ -58,7 +66,8 @@ class CustomUserLoginForm(AuthenticationForm):
                    'placeholder': 'PASSWORD'})
     )
 
-    def clean(self):
+    def clean(self) -> dict[str, Any]:
+        """Authenticate the user by email and password."""
         email = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
 
@@ -72,6 +81,8 @@ class CustomUserLoginForm(AuthenticationForm):
 
 
 class CustomUserUpdateForm(forms.ModelForm):
+    """Profile form for editing account and address details."""
+
     phone = forms.CharField(
         required=False,
         validators=[RegexValidator(r'^\+?1?\d{9,15}$', "Enter a valid phone number.")],
@@ -129,13 +140,15 @@ class CustomUserUpdateForm(forms.ModelForm):
                        'placeholder': 'POSTAL CODE'}),
         }
 
-    def clean_email(self):
+    def clean_email(self) -> str:
+        """Validate that the email is not used by another account."""
         email = self.cleaned_data.get('email')
         if email and User.objects.filter(email=email).exclude(id=self.instance.id).exists():
-            raise forms.ValidationError('This email is alredy in use.')
+            raise forms.ValidationError('This email is already in use.')
         return email
 
-    def clean(self):
+    def clean(self) -> dict[str, Any]:
+        """Preserve the current email and sanitize profile text fields."""
         cleaned_data = super().clean()
         if not cleaned_data.get('email'):
             cleaned_data['email'] = self.instance.email

@@ -1,11 +1,15 @@
+from typing import Any
+
 from django import template
+
 from cart.models import Cart
 
 register = template.Library()
 
 
 @register.simple_tag(takes_context=True)
-def get_cart_count(context):
+def get_cart_count(context: dict[str, Any]) -> int:
+    """Return the current session cart item count for templates."""
     request = context["request"]
     if not request.session.session_key:
         return 0
@@ -19,8 +23,9 @@ def get_cart_count(context):
 
 
 @register.filter
-def multiply(value, arg):
+def multiply(value: Any, arg: Any) -> float:
+    """Multiply two template values and return zero when conversion fails."""
     try:
         return float(value) * float(arg)
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
         return 0

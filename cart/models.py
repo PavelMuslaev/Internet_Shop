@@ -1,27 +1,37 @@
+from decimal import Decimal
+
 from django.db import models
-from django.contrib.sessions.models import Session
 
 from main.models import Product, ProductSize
-from decimal import Decimal
 
 
 class Cart(models.Model):
+    """Shopping cart connected to an anonymous or authenticated session."""
+
     session_key = models.CharField(max_length=40, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Cart {self.session_key}"
 
     @property
-    def total_items(self):
+    def total_items(self) -> int:
+        """Return the total quantity of all items in the cart."""
         return sum(item.quantity for item in self.items.all())
 
     @property
-    def subtotal(self):
-        return sum(item.total_price for item in self.items.all())
+    def subtotal(self) -> Decimal:
+        """Return the cart subtotal before discounts, taxes or shipping."""
+        return sum((item.total_price for item in self.items.all()), Decimal("0"))
 
-    def add_product(self, product: Product, product_size: ProductSize, quantity=1):
+    def add_product(
+        self,
+        product: Product,
+        product_size: ProductSize,
+        quantity: int = 1,
+    ) -> "CartItem":
+        """Add a product-size pair to the cart or increase its quantity."""
         if product_size.product.id != product.id:
             raise ValueError("ProductSize does not belong to this product")
 
@@ -39,6 +49,7 @@ class Cart(models.Model):
         return cart_item
 
     def remove_item(self, item_id: int) -> bool:
+        """Remove an item by id and report whether it existed."""
         try:
             item = self.items.get(id=item_id)
             item.delete()
@@ -48,6 +59,7 @@ class Cart(models.Model):
             return True
 
     def update_item_quantity(self, item_id: int, quantity: int) -> bool:
+        """Update an item quantity, deleting the item when quantity is zero."""
         try:
             item = self.items.get(id=item_id)
             if quantity > 0:
@@ -60,11 +72,14 @@ class Cart(models.Model):
         else:
             return True
 
-    def clear(self):
+    def clear(self) -> None:
+        """Remove every item from the cart."""
         self.items.all().delete()
 
 
 class CartItem(models.Model):
+    """One product-size line item inside a shopping cart."""
+
     cart = models.ForeignKey(Cart, related_name="items", on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     product_size = models.ForeignKey(ProductSize, on_delete=models.CASCADE)
@@ -85,9 +100,10 @@ class CartItem(models.Model):
         verbose_name = "Cart item 🌑"
         verbose_name_plural = "Cart items ☀️"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.product.name} - {self.product_size.size.name} x {self.quantity}"
 
     @property
-    def total_price(self):
+    def total_price(self) -> Decimal:
+        """Return the total price for this line item."""
         return Decimal(str(self.product.price)) * self.quantity

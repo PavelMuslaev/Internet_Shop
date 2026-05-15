@@ -1,10 +1,22 @@
+from typing import Any
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.html import strip_tags
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, first_name, last_name, password=None, **extra_fields):
+    """Manager that creates users authenticated by email."""
+
+    def create_user(
+        self,
+        email: str,
+        first_name: str,
+        last_name: str,
+        password: str | None = None,
+        **extra_fields: Any,
+    ) -> "CustomUser":
+        """Create and save a regular user with an email and password."""
         if not email:
             raise ValueError("The Email field must be set.")
         email = self.normalize_email(email)
@@ -13,7 +25,15 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, first_name, last_name, password=None, **extra_fields):
+    def create_superuser(
+        self,
+        email: str,
+        first_name: str,
+        last_name: str,
+        password: str | None = None,
+        **extra_fields: Any,
+    ) -> "CustomUser":
+        """Create and save a superuser with admin permissions."""
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
@@ -26,6 +46,8 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractUser):
+    """Custom user model that uses email instead of username for login."""
+
     email = models.EmailField(unique=True, max_length=254)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -44,10 +66,11 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.email
 
-    def clean(self):
+    def clean(self) -> None:
+        """Strip HTML tags from optional profile text fields before saving."""
         for field in ['company', 'address1', 'address2', 'city',
                       'country', 'province', 'postal_code', 'phone']:
             value = getattr(self, field)

@@ -1,9 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+
 from .models import CustomUser
 
 
 class CustomUserAdmin(UserAdmin):
+    """Admin configuration for the email-based custom user model."""
+
     list_display = ('email', 'first_name', 'last_name', 'country')
     list_filter = ('country',)
     search_fields = ('email', 'first_name', 'last_name', 'company',
@@ -33,6 +36,7 @@ class CustomUserAdmin(UserAdmin):
     )
 
     def get_form(self, request, obj=None, **kwargs):
+        """Disable username if Django includes it in the generated admin form."""
         form = super().get_form(request, obj, **kwargs)
         if 'username' in form.base_fields:
             form.base_fields['username'].disabled = True

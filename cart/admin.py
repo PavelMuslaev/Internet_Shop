@@ -1,8 +1,11 @@
 from django.contrib import admin
+
 from .models import Cart, CartItem
 
 
 class CartItemInline(admin.TabularInline):
+    """Inline editor for cart items inside a cart admin page."""
+
     model = CartItem
     extra = 0
     readonly_fields = ("total_price",)
@@ -10,6 +13,8 @@ class CartItemInline(admin.TabularInline):
 
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):
+    """Admin configuration for carts."""
+
     list_display = (
         "session_key",
         "total_items",
@@ -27,6 +32,8 @@ class CartAdmin(admin.ModelAdmin):
 
 @admin.register(CartItem)
 class CartItemAdmin(admin.ModelAdmin):
+    """Admin configuration for individual cart items."""
+
     list_display = (
         "cart",
         "product",

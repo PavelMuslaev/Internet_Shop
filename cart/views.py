@@ -1,38 +1,44 @@
-from django.shortcuts import get_object_or_404, redirect
-from django.views.generic import View
-from django.http import JsonResponse
-from django.template.response import TemplateResponse
 from django.db import transaction
+from django.http import HttpRequest, JsonResponse
+from django.http.response import HttpResponseBase
+from django.shortcuts import get_object_or_404, redirect
+from django.template.response import TemplateResponse
+from django.views.generic import View
+
 from main.models import Product, ProductSize
-from .models import Cart, CartItem
+
 from .forms import AddToCartForm, UpdateCartItemForm
+from .models import Cart, CartItem
 
 
 class CartMixin:
-    def get_cart(self, request):
-        # Есть ли у объекта request атрибут cart?
+    """Shared helper for resolving the current session cart."""
+
+    def get_cart(self, request: HttpRequest) -> Cart:
+        """Return the cart attached by middleware or create one for the session."""
         if hasattr(request, "cart"):
             return request.cart
 
         if not request.session.session_key:
             request.session.create()
 
-        cart, is_created = Cart.objects.get_or_create(
+        cart, _created = Cart.objects.get_or_create(
             session_key=request.session.session_key
         )
 
         request.session["cart_id"] = cart.id
-        # Сессия была изменена. Не забудь сохранить её в хранилище сессий и при необходимости обновить cookie.
         request.session.modified = True
         return cart
 
 
 class CartModalView(CartMixin, View):
-    def get(self, request):
+    """Render the cart modal content."""
+
+    def get(self, request: HttpRequest) -> TemplateResponse:
+        """Return cart items ordered by newest first."""
         cart = self.get_cart(request)
         context = {
             "cart": cart,
-            # С select_related Django делает JOIN и заранее подтягивает связанные объекты.
             "cart_items": cart.items.select_related(
                 "product", "product_size__size"
             ).order_by("-added_at"),
@@ -41,10 +47,11 @@ class CartModalView(CartMixin, View):
 
 
 class AddToCartView(CartMixin, View):
-    # Выполни весь метод внутри транзакции базы данных.
-    # Если внутри произойдёт ошибка, изменения откатятся.
+    """Add a product to the current cart."""
+
     @transaction.atomic
-    def post(self, request, slug):
+    def post(self, request: HttpRequest, slug: str) -> HttpResponseBase:
+        """Validate stock and add the selected product-size pair."""
         cart = self.get_cart(request)
         product = get_object_or_404(Product, slug=slug)
 
@@ -70,7 +77,8 @@ class AddToCartView(CartMixin, View):
         quantity = form.cleaned_data["quantity"]
         if product_size.stock < quantity:
             return JsonResponse(
-                {"error": f"Only {product_size.stock} items available"}, status=400
+                {"error": f"Only {product_size.stock} items available"},
+                status=400,
             )
 
         existing_item = cart.items.filter(
@@ -81,9 +89,13 @@ class AddToCartView(CartMixin, View):
         if existing_item:
             total_quantity = existing_item.quantity + quantity
             if total_quantity > product_size.stock:
+                available_quantity = product_size.stock - existing_item.quantity
                 return JsonResponse(
                     {
-                        "error": f"Cannot add {quantity} items. Only {product_size.stock - existing_item.quantity} more available."
+                        "error": (
+                            f"Cannot add {quantity} items. "
+                            f"Only {available_quantity} more available."
+                        )
                     },
                     status=400,
                 )
@@ -95,20 +107,22 @@ class AddToCartView(CartMixin, View):
 
         if request.headers.get("HX-Request"):
             return redirect("cart:cart_modal")
-        else:
-            return JsonResponse(
-                {
-                    "success": True,
-                    "total_items": cart.total_items,
-                    "message": f"{product.name} added to cart",
-                    "cart_item_id": cart_item.id,
-                }
-            )
+        return JsonResponse(
+            {
+                "success": True,
+                "total_items": cart.total_items,
+                "message": f"{product.name} added to cart",
+                "cart_item_id": cart_item.id,
+            }
+        )
 
 
 class UpdateCartItemView(CartMixin, View):
+    """Update the quantity of one cart item."""
+
     @transaction.atomic
-    def post(self, request, item_id):
+    def post(self, request: HttpRequest, item_id: int) -> HttpResponseBase:
+        """Validate and persist a cart item quantity change."""
         cart = self.get_cart(request)
         cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
 
@@ -148,7 +162,10 @@ class UpdateCartItemView(CartMixin, View):
 
 
 class RemoveCartItemView(CartMixin, View):
-    def post(self, request, item_id):
+    """Remove a cart item from the current cart."""
+
+    def post(self, request: HttpRequest, item_id: int) -> HttpResponseBase:
+        """Delete an item and return the refreshed cart modal."""
         cart = self.get_cart(request)
 
         try:
@@ -171,7 +188,10 @@ class RemoveCartItemView(CartMixin, View):
 
 
 class CartCountView(CartMixin, View):
-    def get(self, request):
+    """Return the current cart item count and subtotal as JSON."""
+
+    def get(self, request: HttpRequest) -> JsonResponse:
+        """Return lightweight cart data for header updates."""
         cart = self.get_cart(request)
         return JsonResponse(
             {"total_items": cart.total_items, "subtotal": float(cart.subtotal)}
@@ -179,7 +199,10 @@ class CartCountView(CartMixin, View):
 
 
 class ClearCartView(CartMixin, View):
-    def post(self, request):
+    """Remove every item from the current cart."""
+
+    def post(self, request: HttpRequest) -> HttpResponseBase:
+        """Clear the cart and return either an HTMX partial or JSON."""
         cart = self.get_cart(request)
         cart.clear()
 
@@ -192,7 +215,10 @@ class ClearCartView(CartMixin, View):
 
 
 class CartSummaryView(CartMixin, View):
-    def get(self, request):
+    """Render a compact cart summary partial."""
+
+    def get(self, request: HttpRequest) -> TemplateResponse:
+        """Return cart summary items ordered by newest first."""
         cart = self.get_cart(request)
         context = {
             "cart": cart,

@@ -1,23 +1,31 @@
+from typing import Any, Callable, ClassVar
+
+from django.db.models import Q, QuerySet
+from django.http import HttpRequest
+from django.http.response import HttpResponseBase
 from django.shortcuts import get_object_or_404
-from django.views.generic import TemplateView, DetailView
-from django.http import HttpResponse
 from django.template.response import TemplateResponse
+from django.views.generic import DetailView, TemplateView
 
 from .models import Category, Product, Size
-from django.db.models import Q
 
 
-# Create your views here.
 class IndexView(TemplateView):
+    """Render the home page shell and its HTMX partial."""
+
     template_name = "main/base.html"
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        """Add navigation categories to the base home context."""
         context = super().get_context_data(**kwargs)
         context["categories"] = Category.objects.all()
         context["current_category"] = None
         return context
 
-    def get(self, request, *args, **kwargs):
+    def get(
+        self, request: HttpRequest, *args: Any, **kwargs: Any
+    ) -> HttpResponseBase:
+        """Return only the home partial for HTMX requests."""
         context = self.get_context_data(**kwargs)
         if request.headers.get("HX-Request"):
             return TemplateResponse(request, "main/home_content.html", context)
@@ -26,9 +34,13 @@ class IndexView(TemplateView):
 
 
 class CatalogView(TemplateView):
+    """Render the product catalog with search, category and filter support."""
+
     template_name = "main/base.html"
 
-    FILTER_MAPPING = {
+    FILTER_MAPPING: ClassVar[
+        dict[str, Callable[[QuerySet[Product], str], QuerySet[Product]]]
+    ] = {
         "color": lambda queryset, value: queryset.filter(color__iexact=value),
         "min_price": lambda queryset, value: queryset.filter(price__gte=value),
         "max_price": lambda queryset, value: queryset.filter(price__lte=value),
@@ -37,7 +49,8 @@ class CatalogView(TemplateView):
         ),
     }
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        """Build catalog context from URL kwargs and GET filters."""
         context = super().get_context_data(**kwargs)
         category_slug = kwargs.get("category_slug")
         categories = Category.objects.all()
@@ -81,12 +94,15 @@ class CatalogView(TemplateView):
 
         return context
 
-    def get(self, request, *args, **kwargs):
+    def get(
+        self, request: HttpRequest, *args: Any, **kwargs: Any
+    ) -> HttpResponseBase:
+        """Render catalog partials for HTMX requests and the full shell otherwise."""
         context = self.get_context_data(**kwargs)
         if request.headers.get("HX-Request"):
             if context.get("show_search"):
                 return TemplateResponse(request, "main/search_input.html", context)
-            elif context.get("reset_search"):
+            if context.get("reset_search"):
                 return TemplateResponse(request, "main/search_button.html", {})
             template = (
                 "main/filter_modal.html"
@@ -98,34 +114,28 @@ class CatalogView(TemplateView):
 
 
 class ProductDetailView(DetailView):
-    """
-    Это классовое представление для отображения одного конкретного товара.
-    Оно наследуется от DetailView, который уже умеет:
-        - Извлекать объект из базы по определённому полю (у нас — slug).
-        - Если объект не найден — автоматически выбрасывает Http404.
-        - Добавлять объект в контекст под именем object и именем модели в нижнем регистре (product).
-        - Рендерить шаблон.
-    """
+    """Render a single product page by slug."""
 
     model = Product
     template_name = "main/base.html"
-    slug_field = "slug"  #  говорим, что уникальный идентификатор, передаваемый в URL, хранится в поле slug модели Product.
-    slug_url_kwarg = "slug"  # имя аргумента в URL, откуда брать значение slug. Должно совпадать с конвертером пути.
+    slug_field = "slug"
+    slug_url_kwarg = "slug"
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        """Add category navigation and related products to the detail context."""
         context = super().get_context_data(**kwargs)
         product = self.object
         context["categories"] = Category.objects.all()
         context["related_products"] = Product.objects.filter(
             category=product.category
-        ).exclude(id=product.id)[
-            :4
-        ]  # до 4 товаров той же категории, исключая текущий.
-        # Использован срез [:4], Django транслирует это в LIMIT 4.
+        ).exclude(id=product.id)[:4]
         context["current_category"] = product.category.slug
         return context
 
-    def get(self, request, *args, **kwargs):
+    def get(
+        self, request: HttpRequest, *args: Any, **kwargs: Any
+    ) -> HttpResponseBase:
+        """Return only the product detail partial for HTMX requests."""
         self.object = self.get_object()
         context = self.get_context_data(**kwargs)
         if request.headers.get("HX-Request"):
