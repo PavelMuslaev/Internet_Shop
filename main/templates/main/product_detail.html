@@ -1,4 +1,4 @@
-<main class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<main id="product-detail" class="mx-auto px-4 sm:px-6 lg:px-8 py-8" data-add-to-cart-url="{% url 'cart:add_to_cart' product.slug %}">
     <!-- Breadcrumb -->
     <div class="mb-8">
         <nav class="text-sm text-gray-600">
@@ -67,7 +67,7 @@
                     {% for product_size in product.product_sizes.all %}
                     <div class="size-option">
                         <input type="radio" 
-                               name="size" 
+                               name="size-{{ product.id }}" 
                                class="size-radio hidden"
                                id="size-{{ product_size.id }}"
                                value="{{ product_size.id }}"
@@ -93,7 +93,7 @@
             <div class="space-y-4">
                 <button id="add-to-cart-btn" 
                         class="w-full bg-black text-white py-3 px-6 text-sm font-medium hover:bg-gray-800 transition-colors"
-                        onclick="addToCart()"
+                        onclick="addToCart(this)"
                         {% if not product.product_sizes.all %}disabled{% endif %}>
                     ADD TO CART
                 </button>
@@ -170,18 +170,24 @@
 </style>
 
 <script>
+    (function() {
     let selectedSize = null;
     let selectedSizeId = null;
 
-    function changeMainImage(src) {
-        const mainImg = document.querySelector('.aspect-square img');
+    function getProductRoot(element) {
+        return element ? element.closest('#product-detail') : document.getElementById('product-detail');
+    }
+
+    window.changeMainImage = function(src) {
+        const root = getProductRoot();
+        const mainImg = root ? root.querySelector('.aspect-square img') : null;
         if (mainImg) {
             mainImg.src = src;
         }
-    }
+    };
 
-    function updateSelectedSize() {
-        const sizeRadios = document.querySelectorAll('.size-radio');
+    function updateSelectedSize(root) {
+        const sizeRadios = root ? root.querySelectorAll('.size-radio') : [];
         const checkedRadio = Array.from(sizeRadios).find(radio => radio.checked && !radio.disabled);
         if (checkedRadio) {
             selectedSize = checkedRadio.dataset.size;
@@ -194,12 +200,13 @@
         }
     }
 
-     function addToCart() {
-        const productSlug = '{{ product.slug }}';
-        console.log('Product Slug:', productSlug);
+    window.addToCart = function(button) {
+        const root = getProductRoot(button);
+        const addToCartUrl = root ? root.dataset.addToCartUrl : null;
+        console.log('Add to cart URL:', addToCartUrl);
 
         // Update selected size before sending
-        updateSelectedSize();
+        updateSelectedSize(root);
         console.log('Selected Size ID:', selectedSizeId);
 
         if (!selectedSizeId) {
@@ -210,7 +217,7 @@
         let formData = new FormData();
         formData.append('size_id', selectedSizeId);
         formData.append('quantity', '1');
-        fetch(`{% url 'cart:add_to_cart' 'PLACEHOLDER' %}`.replace('PLACEHOLDER', productSlug), {
+        fetch(addToCartUrl, {
             method: 'POST',
             body: formData,
             headers: {
@@ -238,7 +245,7 @@
             console.error('Error:', error);
             showNotification('Error adding to cart');
         });
-    }
+    };
     
     function getCookie(name) {
         let cookieValue = null;
@@ -272,8 +279,13 @@
     }
 
     function initializeSizeRadios() {
-        const sizeRadios = document.querySelectorAll('.size-radio');
-        const addToCartBtn = document.getElementById('add-to-cart-btn');
+        const root = getProductRoot();
+        if (!root) {
+            return;
+        }
+
+        const sizeRadios = root.querySelectorAll('.size-radio');
+        const addToCartBtn = root.querySelector('#add-to-cart-btn');
         console.log('Size Radios Found:', sizeRadios.length);
 
         if (sizeRadios.length === 0) {
@@ -304,7 +316,7 @@
         }
 
         // Update selected size
-        updateSelectedSize();
+        updateSelectedSize(root);
 
         // Add event listeners
         sizeRadios.forEach(radio => {
@@ -314,7 +326,7 @@
                     return;
                 }
                 console.log('Radio Changed - Selected Size:', this.dataset.size, 'ID:', this.value);
-                updateSelectedSize();
+                updateSelectedSize(root);
                 addToCartBtn.disabled = false;
                 addToCartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             });
@@ -334,4 +346,5 @@
             this.style.transform = 'translateY(0)';
         });
     });
+    })();
 </script>

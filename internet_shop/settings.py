@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "main",  # регистрируем приложение main
     "cart",  # регистрируем приложение main
+    "users",
 ]
 
 MIDDLEWARE = [
@@ -139,3 +140,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 SESSION_COOKIE_AGE = 86400  # 30 дней
 SESSION_SAVE_EVERY_REQUEST = True  # Сохранение куки после каждого запроса
+
+
+AUTH_USER_MODEL = "users.CustomUser"
